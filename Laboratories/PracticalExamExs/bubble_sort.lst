@@ -1,0 +1,50 @@
+     1                                  bits 32 
+     2                                  global start      
+     3                                  
+     4                                  extern exit
+     5                                  import exit msvcrt.dll
+     6                                  
+     7                                  ;Write a bubble sort in assembly language.
+     8                                  
+     9                                  segment data use32 class=data
+    10 00000000 080502060903010407-         arr db 8, 5, 2, 6, 9, 3, 1, 4, 7, 0
+    10 00000009 00                 
+    11                                      len equ $-arr
+    12                                  
+    13                                  segment code use32 class=code
+    14                                  start:
+    15                                  
+    16 00000000 66BA0100                    mov dx, 1   ;changed = 1
+    17                                      
+    18                                      while_changed:
+    19 00000004 6683FA00                        cmp dx, 0   ;changed == 0
+    20 00000008 7425                            je the_end
+    21                                  
+    22 0000000A BE[00000000]                    mov esi, arr
+    23 0000000F 66BA0000                        mov dx, 0
+    24 00000013 B909000000                      mov ecx, len - 1
+    25                                  
+    26                                          while_j:
+    27 00000018 8A06                                mov al, [esi]
+    28 0000001A 8A5E01                              mov bl, [esi + 1]
+    29 0000001D 38D8                                cmp al, bl
+    30 0000001F 7E09                                jle next
+    31                                  
+    32 00000021 881E                                mov [esi], bl
+    33 00000023 884601                              mov [esi + 1], al
+    34 00000026 66BA0100                            mov dx, 1       ;changed = 1
+    35                                  
+    36                                              next:
+    37 0000002A 46                                      inc esi
+    38 0000002B E2EB                                    loop while_j
+    39 0000002D EBD5                                    jmp while_changed
+    40                                  
+    41                                      the_end:
+    42 0000002F 6A00                        push dword 0
+    43 00000031 FF15[00000000]              call [exit]
+    44                                  
+    45                                  
+    46                                  
+    47                                      
+    48                                      
+    49                                  

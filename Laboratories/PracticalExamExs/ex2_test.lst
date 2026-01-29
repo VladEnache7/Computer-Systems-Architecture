@@ -1,0 +1,182 @@
+     1                                  section .data
+     2 00000000 456E74657220746865-         num_count db "Enter the number of numbers: "
+     2 00000009 206E756D626572206F-
+     2 00000012 66206E756D62657273-
+     2 0000001B 3A20               
+     3 0000001D 456E7465722061206E-         num_prompt db "Enter a number: "
+     3 00000026 756D6265723A20     
+     4 0000002D 4576656E2073756D3A-         even_sum db "Even sum: "
+     4 00000036 20                 
+     5 00000037 4F64642073756D3A20          odd_sum db "Odd sum: "
+     6 00000040 446966666572656E63-         diff db "Difference: "
+     6 00000049 653A20             
+     7 0000004C 6F75747075742E7478-         output db "output.txt"
+     7 00000055 74                 
+     8 00000056 0A                          newline db 0x0A
+     9                                  
+    10                                  section .bss
+    11 00000000 <res 00000002>              n resb 2
+    12 00000002 <res 00000002>              num resb 2
+    13 00000004 <res 00000004>              even_total resb 4
+    14 00000008 <res 00000004>              odd_total resb 4
+    15                                  
+    16                                  section .text
+    17                                      global _start
+    18                                  
+    19                                  _start:
+    20                                      ; Print the number count prompt
+    21 00000000 66B804000000                mov eax, 4
+    22 00000006 66BB01000000                mov ebx, 1
+    23 0000000C 66B9[00000000]              mov ecx, num_count
+    24                                      mov edx, num_count.len
+    24          ******************       error: symbol `num_count.len' undefined
+    25 00000012 CD80                        int 0x80
+    26                                  
+    27                                      ; Read the number count
+    28 00000014 66B803000000                mov eax, 3
+    29 0000001A 66BB00000000                mov ebx, 0
+    30 00000020 66B9[00000000]              mov ecx, n
+    31 00000026 66BA02000000                mov edx, 2
+    32 0000002C CD80                        int 0x80
+    33                                  
+    34                                      ; Convert the number count to an integer
+    35 0000002E 660FB61E[0000]              movzx ebx, byte [n]
+    36 00000034 660FB60E[0100]              movzx ecx, byte [n + 1]
+    37 0000003A 6689D8                      mov eax, ebx
+    38 0000003D 6689CA                      mov edx, ecx
+    39 00000040 66C1E008                    shl eax, 8
+    40 00000044 6609D0                      or eax, edx
+    41                                  
+    42                                      ; Loop to read and process each number
+    43 00000047 66BB00000000                mov ebx, 0
+    44 0000004D 66B900000000                mov ecx, 0
+    45 00000053 66BA00000000                mov edx, 0
+    46 00000059 66BE00000000                mov esi, 0
+    47 0000005F 66BF00000000                mov edi, 0
+    48                                      mov [even_total], 0
+    48          ******************       error: operation size not specified
+    49                                      mov [odd_total], 0
+    49          ******************       error: operation size not specified
+    50                                  
+    51                                  read_loop:
+    52                                      ; Print the number prompt
+    53 00000065 66B804000000                mov eax, 4
+    54 0000006B 66BB01000000                mov ebx, 1
+    55 00000071 66B9[1D000000]              mov ecx, num_prompt
+    56                                      mov edx, num_prompt.len
+    56          ******************       error: symbol `num_prompt.len' undefined
+    57 00000077 CD80                        int 0x80
+    58                                  
+    59                                      ; Read the number
+    60 00000079 66B803000000                mov eax, 3
+    61 0000007F 66BB00000000                mov ebx, 0
+    62 00000085 66B9[02000000]              mov ecx, num
+    63 0000008B 66BA02000000                mov edx, 2
+    64 00000091 CD80                        int 0x80
+    65                                  
+    66                                      ; Convert the number to an integer
+    67 00000093 660FB61E[0200]              movzx ebx, byte [num]
+    68 00000099 660FB60E[0300]              movzx ecx, byte [num + 1]
+    69 0000009F 6689D8                      mov eax, ebx
+    70 000000A2 6689CA                      mov edx, ecx
+    71 000000A5 66C1E008                    shl eax, 8
+    72 000000A9 6609D0                      or eax, edx
+    73                                  
+    74                                      ; Check if the number is even or odd
+    75 000000AC 66A901000000                test eax, 1
+    76 000000B2 7413                        jz even
+    77                                      ; The number is odd
+    78 000000B4 660106[0800]                add dword [odd_total], eax
+    79 000000B9 EB11                        jmp next
+    80                                  even:
+    81                                      ; The number is even
+    82 000000BB 660106[0400]                add dword [even_total], eax
+    83                                  next:
+    84                                      ; Increment the loop counter
+    85 000000C0 6643                        inc ebx
+    86 000000C2 6639C3                      cmp ebx, eax
+    87 000000C5 7C9E                        jl read_loop
+    88                                  
+    89                                      ; Calculate the difference between the even and odd sums
+    90 000000C7 66A1[0400]                  mov eax, [even_total]
+    91 000000CB 668B1E[0800]                mov ebx, [odd_total]
+    92 000000D0 6629D8                      sub eax, ebx
+    93 000000D3 66A3[4000]                  mov [diff], eax
+    94                                  
+    95                                      ; Open the output file
+    96 000000D7 66B805000000                mov eax, 5
+    97 000000DD 66BB[4C000000]              mov ebx, output
+    98 000000E3 66B902000000                mov ecx, 2
+    99 000000E9 66BA00000000                mov edx, 0
+   100 000000EF CD80                        int 0x80
+   101                                  
+   102                                      ; Write the even sum to the output file
+   103 000000F1 66B804000000                mov eax, 4
+   104 000000F7 6689C3                      mov ebx, eax
+   105 000000FA 66B9[2D000000]              mov ecx, even_sum
+   106                                      mov edx, even_sum.len
+   106          ******************       error: symbol `even_sum.len' undefined
+   107 00000100 CD80                        int 0x80
+   108                                      
+   109 00000102 66B804000000                mov eax, 4
+   110 00000108 6689C3                  mov ebx, eax
+   111 0000010B 66B9[04000000]          mov ecx, even_total
+   112 00000111 66BA04000000            mov edx, 4
+   113 00000117 CD80                    int 0x80
+   114                                  
+   115 00000119 66B804000000            mov eax, 4
+   116 0000011F 6689C3                  mov ebx, eax
+   117 00000122 66B9[56000000]          mov ecx, newline
+   118 00000128 66BA01000000            mov edx, 1
+   119 0000012E CD80                    int 0x80
+   120                                  
+   121                                  ; Write the odd sum to the output file
+   122 00000130 66B804000000            mov eax, 4
+   123 00000136 6689C3                  mov ebx, eax
+   124 00000139 66B9[37000000]          mov ecx, odd_sum
+   125                                  mov edx, odd_sum.len
+   125          ******************       error: symbol `odd_sum.len' undefined
+   126 0000013F CD80                    int 0x80
+   127                                  
+   128 00000141 66B804000000            mov eax, 4
+   129 00000147 6689C3                  mov ebx, eax
+   130 0000014A 66B9[08000000]          mov ecx, odd_total
+   131 00000150 66BA04000000            mov edx, 4
+   132 00000156 CD80                    int 0x80
+   133                                  
+   134 00000158 66B804000000            mov eax, 4
+   135 0000015E 6689C3                  mov ebx, eax
+   136 00000161 66B9[56000000]          mov ecx, newline
+   137 00000167 66BA01000000            mov edx, 1
+   138 0000016D CD80                    int 0x80
+   139                                  
+   140                                  ; Write the difference to the output file
+   141 0000016F 66B804000000            mov eax, 4
+   142 00000175 6689C3                  mov ebx, eax
+   143 00000178 66B9[40000000]          mov ecx, diff
+   144                                  mov edx, diff.len
+   144          ******************       error: symbol `diff.len' undefined
+   145 0000017E CD80                    int 0x80
+   146                                  
+   147 00000180 66B804000000            mov eax, 4
+   148 00000186 6689C3                  mov ebx, eax
+   149 00000189 66B9[40000000]          mov ecx, diff
+   150 0000018F 66BA04000000            mov edx, 4
+   151 00000195 CD80                    int 0x80
+   152                                  
+   153 00000197 66B804000000            mov eax, 4
+   154 0000019D 6689C3                  mov ebx, eax
+   155 000001A0 66B9[56000000]          mov ecx, newline
+   156 000001A6 66BA01000000            mov edx, 1
+   157 000001AC CD80                    int 0x80
+   158                                  
+   159                                  ; Close the output file
+   160 000001AE 66B806000000            mov eax, 6
+   161 000001B4 6689C3                  mov ebx, eax
+   162 000001B7 CD80                    int 0x80
+   163                                  
+   164                                  ; Exit the program
+   165 000001B9 66B801000000            mov eax, 1
+   166 000001BF 6631DB                  xor ebx, ebx
+   167 000001C2 CD80                    int 0x80
+   168                                  

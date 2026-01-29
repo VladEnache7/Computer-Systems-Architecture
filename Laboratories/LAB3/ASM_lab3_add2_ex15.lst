@@ -1,0 +1,36 @@
+     1                                  bits 32 
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit
+     6                                  
+     7                                  import exit msvcrt.dll
+     8                                   
+     9                                  segment data use32 class = data
+    10                                      
+    11 00000000 AB                          a db -55h
+    12 00000001 2211                        b dw 1122h
+    13 00000003 88776644                    c dd 44667788h
+    14                                      
+    15                                  segment code use32 class = code
+    16                                  start: ;c + a + b + b + a - signed
+    17                                      
+    18 00000000 8B0D[03000000]              mov ECX, [c]    ;ECX = c
+    19                                      
+    20 00000006 66A1[01000000]              mov AX, [b]     ;AX = b
+    21 0000000C 98                          cwde            ;AX -> EAX = b
+    22 0000000D 89C3                        mov EBX, EAX    ;EBX = b
+    23                                      
+    24 0000000F A0[00000000]                mov AL, [a]      ;AL = a
+    25 00000014 6698                        cbw             ;AL -> AX = a
+    26 00000016 98                          cwde            ;AX -> EAX = a
+    27                                      
+    28 00000017 01C1                        add ECX, EAX    ;ECX = c + a
+    29 00000019 01D9                        add ECX, EBX    ;ECX = c + a + b
+    30 0000001B 01D9                        add ECX, EBX    ;ECX = c + a + b + b
+    31 0000001D 01C1                        add ECX, EAX    ;ECX = c + a + b + b + a
+    32                                      
+    33 0000001F 6A00                        push dword 0
+    34 00000021 FF15[00000000]              call [exit]
+    35                                  
+    36                                  

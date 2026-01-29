@@ -1,0 +1,103 @@
+     1                                  bits 32 
+     2                                  global start        
+     3                                  ;A sentence is read from the keyboard. Inverse every _words in the sentence and print the result on the screen.
+     4                                  ;The sentence is ended by a dot.
+     5                                  ;The _words are separated by a space.
+     6                                  ;The _words are composed of letters only.
+     7                                  
+     8                                  extern printf, gets, exit
+     9                                  
+    10                                  import printf msvcrt.dll
+    11                                  import gets msvcrt.dll
+    12                                  import exit msvcrt.dll
+    13                                  
+    14                                  segment data use32 class=data
+    15 00000000 <res 00000064>              sentence resb 100
+    16 00000064 257300                      read_format db "%s", 0
+    17 00000067 <res 00000064>              _word resb 100
+    18 000000CB 2E00                        dot db ".", 0
+    19 000000CD <res 00000064>              inverse__word resb 100
+    20 00000131 2000                        space db " ", 0
+    21 00000133 C8000000                    read_len dd 200
+    22                                      
+    23                                      
+    24                                  segment code use32 class=code
+    25                                  start:
+    26                                  
+    27                                      ;Read a sentence from the keyboard
+    28                                      ;gets("%s", sentence)
+    29 00000000 68[00000000]                push sentence
+    30 00000005 FF15[00000000]              call [gets]
+    31 0000000B 83C408                      add esp, 8
+    32                                  
+    33                                      ;Inverse every _words in the sentence without using C functions
+    34                                       
+    35                                      ;Initialize the index of the sentence
+    36 0000000E BE[00000000]                mov esi, sentence
+    37                                      while_sentence:
+    38                                          ;Initialize the index of the _word
+    39 00000013 BF[67000000]                    mov edi, _word
+    40                                          while__word:
+    41                                              ;Read a character from the sentence
+    42 00000018 8A06                                mov al, [esi]
+    43                                              ;If the character is a space or a dot, the _word is finished
+    44 0000001A 3C20                                cmp al, ' '
+    45 0000001C 740A                                je end__word
+    46 0000001E 3C2E                                cmp al, '.'
+    47 00000020 7406                                je end__word
+    48                                              ;Copy the character in the _word
+    49 00000022 8807                                mov [edi], al
+    50                                              ;Increment the index of the sentence and the _word
+    51 00000024 46                                  inc esi
+    52 00000025 47                                  inc edi
+    53 00000026 EBF0                                jmp while__word
+    54                                          end__word:
+    55 00000028 C60700                              mov [edi], byte 0
+    56                                              ;Inverse the _word
+    57 0000002B 89FB                                mov ebx, edi
+    58 0000002D BF[CD000000]                        mov edi, inverse__word
+    59                                              while_inverse__word:
+    60 00000032 4B                                      dec ebx
+    61 00000033 8A03                                    mov al, [ebx]
+    62 00000035 8807                                    mov [edi], al
+    63 00000037 47                                      inc edi
+    64 00000038 81FB[67000000]                          cmp ebx, _word
+    65 0000003E 75F2                                    jne while_inverse__word
+    66 00000040 C60700                              mov [edi], byte 0
+    67                                              ;Print the _word on the screen
+    68                                              ;printf("%s", inverse__word)
+    69 00000043 68[CD000000]                        push inverse__word
+    70 00000048 68[64000000]                        push read_format
+    71 0000004D FF15[00000000]                      call [printf]
+    72 00000053 83C408                              add esp, 8
+    73                                              ;If the character is a dot, the sentence is finished
+    74 00000056 3C2E                                cmp al, '.'
+    75 00000058 7411                                je end_sentence
+    76                                              ;Print a space on the screen
+    77                                              ;printf(" ")
+    78 0000005A 68[31010000]                        push space
+    79 0000005F FF15[00000000]                      call [printf]
+    80 00000065 83C404                              add esp, 4
+    81                                              ;Increment the index of the sentence
+    82 00000068 46                                  inc esi
+    83 00000069 EBA8                                jmp while_sentence
+    84                                          end_sentence:
+    85                                              ;Print a dot on the screen
+    86                                              ;printf(".")
+    87 0000006B 68[CB000000]                        push dot
+    88 00000070 FF15[00000000]                      call [printf]
+    89 00000076 83C404                              add esp, 4
+    90 00000079 EB00                                jmp end
+    91                                      end:   
+    92                                  
+    93 0000007B 6A00                        push dword 0      
+    94 0000007D FF15[00000000]              call [exit]  
+    95                                  
+    96                                          
+    97                                  
+    98                                  
+    99                                  
+   100                                  
+   101                                  
+   102                                  
+   103                                      

@@ -1,0 +1,77 @@
+     1                                  bits 32 
+     2                                  global start        
+     3                                  extern exit   
+     4                                  import exit msvcrt.dll  
+     5                                    ;A string of words is given. Build two strings of bytes, s1 and s2, in the following way: for each word,
+     6                                              ;if the number of bits 1 from the high byte of the word is larger than the number of bits 1 from its low byte, then s1 will contain the high byte and s2 will contain the low byte of the word
+     7                                              ;if the number of bits 1 from the high byte of the word is equal to the number of bits 1 from its low byte, then s1 will contain the number of bits 1 from the low byte and s2 will contain 0
+     8                                              ;otherwise, s1 will contain the low byte and s2 will contain the high byte of the word.
+     9                                  segment data use32 class=data
+    10 00000000 0756153C4615458761-        s dw 5607h, 3C15h, 1546h, 8745h, 4561h, 18E0h
+    10 00000009 45E018             
+    11                                     lens equ ($ - s)/2 ;length of s in bytes
+    12 0000000C <res 00000006>             s1 resb lens
+    13 00000012 <res 00000006>             s2 resb lens
+    14                                  segment code use32 class=code
+    15                                      start: 
+    16                                          
+    17 00000000 FC                              CLD             ;DF = 0
+    18 00000001 BF00000000                      mov EDI, 0      ;index of s1 and s2
+    19 00000006 BE[00000000]                    mov ESI, s      ;ESI = offset s
+    20                                          loop1:
+    21                                              ;counting the number of bits 1 from low byte
+    22 0000000B B100                                mov CL, 0       ;the counter for low byte
+    23 0000000D AC                                  lodsb           ;AL = [ESI], inc ESI
+    24                                              
+    25                                              loop_start:
+    26 0000000E A801                                    test AL, 1
+    27 00000010 7402                                    jz next
+    28 00000012 FEC1                                    inc CL
+    29                                              next:
+    30 00000014 D0E8                                    shr AL, 1
+    31 00000016 3C00                                    cmp AL, 0
+    32 00000018 77F4                                ja loop_start
+    33                                              ;counting the number of bits 1 from high byte  
+    34 0000001A B200                                mov DL, 0       ;the counter for high byte
+    35 0000001C AC                                  lodsb           ;AL = [ESI], inc ESI
+    36                                              loop_start2:
+    37 0000001D A801                                    test AL, 1
+    38 0000001F 7402                                    jz next2
+    39 00000021 FEC2                                    inc DL
+    40                                              next2:
+    41 00000023 D0E8                                    shr AL, 1
+    42 00000025 3C00                                    cmp AL, 0
+    43 00000027 77F4                                ja loop_start2
+    44                                              
+    45 00000029 38CA                                cmp DL, CL
+    46 0000002B 7711                                ja larger
+    47 0000002D 7223                                jb smaller
+    48                                              
+    49                                              ;if equal
+    50 0000002F 888F[0C000000]                      mov [s1 + EDI], CL
+    51 00000035 C687[12000000]00                    mov byte [s2 + EDI], 0
+    52 0000003C EB28                                jmp final
+    53                                              
+    54                                              larger:
+    55 0000003E 8A5EFF                                  mov BL, [ESI - 1]
+    56 00000041 889F[0C000000]                          mov [s1 + EDI], BL
+    57                                                  
+    58 00000047 8A5EFE                                  mov BL, [ESI - 2]
+    59 0000004A 889F[12000000]                          mov [s2 + EDI], BL
+    60                                                  
+    61 00000050 EB14                                    jmp final
+    62                                              smaller:
+    63 00000052 8A5EFF                                  mov BL, [ESI - 1]
+    64 00000055 889F[12000000]                          mov [s2 + EDI], BL
+    65                                                  
+    66 0000005B 8A5EFE                                  mov BL, [ESI - 2]
+    67 0000005E 889F[0C000000]                          mov [s1 + EDI], BL
+    68                                                  
+    69 00000064 EB00                                    jmp final
+    70                                              final:
+    71 00000066 47                                  inc EDI
+    72 00000067 83FF06                              cmp EDI, lens
+    73 0000006A 729F                            jb loop1
+    74                                          
+    75 0000006C 6A00                            push    dword 0      
+    76 0000006E FF15[00000000]                  call    [exit]     

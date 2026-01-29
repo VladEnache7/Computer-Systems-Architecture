@@ -1,0 +1,64 @@
+     1                                  bits 32 
+     2                                  
+     3                                  
+     4                                  global start        
+     5                                  
+     6                                  
+     7                                  extern exit, scanf, printf  
+     8                                  ;importing the functions           
+     9                                  import exit msvcrt.dll
+    10                                  import scanf msvcrt.dll
+    11                                  import printf msvcrt.dll
+    12                                  
+    13                                  
+    14                                  segment data use32 class=data
+    15 00000000 54686520736D616C6C-         message db "The smallest number is %d", 0;for printing
+    15 00000009 657374206E756D6265-
+    15 00000012 7220697320256400   
+    16 0000001A 00000000                    x dd 0                      ;used for reding the numbers          
+    17 0000001E 256400                      format db "%d", 0           ;for reading
+    18 00000021 00000000                    smallest dd 0
+    19                                      
+    20                                      
+    21                                  segment code use32 class=code
+    22                                      start:
+    23                                          ;reading the first element
+    24                                          ;scanf("%d", smallest);
+    25 00000000 68[21000000]                    push dword smallest
+    26 00000005 68[1E000000]                    push dword format
+    27 0000000A FF15[00000000]                  call [scanf]
+    28 00000010 83C408                          add esp, 4 * 2
+    29                                          
+    30                                          
+    31                                          Repeat:
+    32                                          
+    33                                              ;scanf("%d", x);
+    34 00000013 68[1A000000]                        push dword x
+    35 00000018 68[1E000000]                        push dword format
+    36 0000001D FF15[00000000]                      call [scanf]
+    37 00000023 83C408                              add esp, 4 * 2
+    38                                              
+    39 00000026 A1[1A000000]                        mov eax, [x]
+    40 0000002B 83F800                              cmp eax, 0
+    41 0000002E 740F                                jz after
+    42                                              
+    43 00000030 3B05[21000000]                      cmp eax, [smallest]
+    44 00000036 7F05                                jnle not_smaller
+    45                                                  ;if x < smallest
+    46 00000038 A3[21000000]                            mov [smallest], eax
+    47                                              ;else    
+    48                                              not_smaller:
+    49                                              
+    50                                              
+    51 0000003D EBD4                                jmp Repeat   ;it stops the loop at the first 0 read
+    52                                              
+    53                                          after:
+    54                                          
+    55                                          ;printf("The smallest number is %d", smallest);
+    56 0000003F FF35[21000000]                  push dword [smallest]
+    57 00000045 68[00000000]                    push dword message
+    58 0000004A FF15[00000000]                  call [printf]
+    59 00000050 83C408                          add esp, 4 * 2
+    60                                          
+    61 00000053 6A00                            push    dword 0     
+    62 00000055 FF15[00000000]                  call    [exit]   

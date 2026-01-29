@@ -1,0 +1,74 @@
+     1                                  bits 32 
+     2                                  global start        
+     3                                  
+     4                                  
+     5                                  extern exit               
+     6                                  import exit msvcrt.dll    
+     7                                                            
+     8                                  segment data use32 class=data
+     9 00000000 313031303031313162-         given db '10100111b', '01100011b', '110b', '101011b', 0
+     9 00000009 303131303030313162-
+     9 00000012 313130623130313031-
+     9 0000001B 316200             
+    10 0000001E <res 00000064>              obtain resb 100
+    11                                  segment code use32 class=code
+    12                                  
+    13                                      transformation:
+    14                                          ;input = 1 and 0 on stack and at the end a 'b'
+    15                                          ;ouput = in edx - the number
+    16 00000000 5B                              pop ebx     ;saving the address of return into ebx
+    17 00000001 BA00000000                      mov edx, 0  ;building the number
+    18 00000006 B901000000                      mov ecx, 1  ;used for the powers of 2
+    19                                          
+    20                                          while_digit2:
+    21 0000000B 58                                  pop eax     ;eax = 00 00 00 0x and x = 0 or 1 or 'b'
+    22                                              
+    23                                              ;exiting in case of 'b' in stack
+    24 0000000C 83F862                              cmp eax, 'b'
+    25 0000000F 740F                                je exit_while_digit2
+    26                                              
+    27 00000011 F6E1                                mul cl      ;ax = al * cl
+    28 00000013 01C2                                add edx, eax;adding in edx, the result of the multiplication
+    29                                              
+    30                                              ;ecx *= 2 (with the help of eax)
+    31 00000015 B802000000                          mov eax, 2
+    32 0000001A F6E1                                mul cl      ;ax = cl * 2
+    33 0000001C 89C1                                mov ecx, eax
+    34 0000001E EBEB                            jmp while_digit2
+    35                                          
+    36                                          exit_while_digit2:    
+    37 00000020 53                              push ebx    ;restoring the return address  
+    38 00000021 C3                              ret
+    39                                          
+    40                                      start:
+    41 00000022 BF[00000000]                    mov edi, given  ;edi = the address of given
+    42 00000027 BE[1E000000]                    mov esi, obtain ;esi the address of obtain
+    43                                          while_elms:     ;while we haven't arrived at the end of the string
+    44                                              
+    45 0000002C 803F00                              cmp [edi], byte 0
+    46 0000002F 7422                                je exit_while_elms  ;if is the end of the string
+    47                                              
+    48 00000031 B862000000                          mov eax, 'b'         ;for scasb
+    49                                             
+    50 00000036 6A62                                push dword 'b'      ;the sign of the end of bits in the stack
+    51                                              while_bits:
+    52 00000038 AE                                      scasb       ;if the caracter is 'b' - the end of the string, inc(edi)
+    53 00000039 740E                                    je exit_while_digit ;if the end of the string of bits
+    54 0000003B BA00000000                              mov edx, 0
+    55 00000040 8A57FF                                  mov dl, [edi - 1]  ;edx = '0' or '1'
+    56 00000043 80EA30                                  sub dl, '0'        ;edx = 0 or 1
+    57 00000046 52                                      push edx            ;pushing the bits on the stack
+    58 00000047 EBEF                                    jmp while_bits
+    59                                              
+    60                                              exit_while_digit:
+    61                                              
+    62 00000049 E8B2FFFFFF                          call transformation     ;calling the function
+    63                                              
+    64                                              ;saving the number in the obtain array
+    65 0000004E 8916                                mov [esi], edx
+    66 00000050 46                                  inc esi
+    67                                              
+    68 00000051 EBD9                                jmp while_elms
+    69                                          exit_while_elms:
+    70 00000053 6A00                            push    dword 0  
+    71 00000055 FF15[00000000]                  call    [exit]       

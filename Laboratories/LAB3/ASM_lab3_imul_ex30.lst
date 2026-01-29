@@ -1,0 +1,63 @@
+     1                                  bits 32 
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit
+     6                                  
+     7                                  import exit msvcrt.dll
+     8                                   
+     9                                  segment data use32 class = data
+    10                                      
+    11 00000000 5588                        a dw 8855h
+    12 00000002 04                          b db 4h
+    13 00000003 44                          c db 44h
+    14 00000004 66338844                    e dd 44883366h
+    15 00000008 9988776655443322            x dq 2233445566778899h
+    16                                    
+    17                                  segment code use32 class = code
+    18                                  start:;a * b - (100 - c) / (b * b) + e + x
+    19                                      
+    20                                      ;a * b -> DX:AX
+    21 00000000 A0[02000000]                mov AL, [b]     ;AL = b
+    22 00000005 6698                        cbw             ;AL -> AX = b
+    23 00000007 66F72D[00000000]            imul WORD [a]    ;DX:AX = a * b
+    24                                      
+    25 0000000E 6652                        push DX
+    26 00000010 6650                        push AX         ;[ESP]1 = DX:AX = a * b
+    27                                      
+    28                                      ;b * b -> BX 
+    29 00000012 A0[02000000]                mov AL, [b]     ;AL = b
+    30 00000017 F62D[02000000]              imul BYTE [b]    ;AX = b * b
+    31 0000001D 6689C3                      mov BX, AX      ;BX = b * b
+    32                                      
+    33                                      ;(100 - c) -> DX:AX
+    34 00000020 B064                        mov AL, 100
+    35 00000022 2A05[03000000]              sub AL, [c]     ;AL = (100 - c)
+    36 00000028 6698                        cbw             ;AL -> AX
+    37 0000002A 6699                        cwd             ;AX -> DX:AX = (100 - c)
+    38                                      
+    39 0000002C 66F7FB                      idiv BX         ;AX = (100 - c) / (b * b)
+    40 0000002F 98                          cwde            ;AX -> EAX = (100 - c) / (b * b)
+    41                                      
+    42 00000030 5B                          pop EBX         ;EBX = a * b
+    43                                      
+    44 00000031 29C3                        sub EBX, EAX    ;EBX = a * b - [(100 - c) / (b * b)]
+    45                                      
+    46 00000033 031D[04000000]              add EBX, [e]    ;EBX = [a * b - (100 - c) / (b * b)] + e
+    47                                      
+    48                                      ;EBX -> EDX:EAX
+    49 00000039 89D8                        mov EAX, EBX    ;EAX = EBX
+    50 0000003B 99                          cdq             ;EAX -> EDX:EAX
+    51                                      
+    52                                      ;x -> ECX:EBX 
+    53 0000003C 8B1D[08000000]              mov EBX, [x]
+    54 00000042 8B0D[0C000000]              mov ECX, [x + 4];ECX:EBX = x
+    55                                      
+    56                                      ;[a * b - (100 - c) / (b * b) + e] + x -> EDX:EAX
+    57 00000048 01D8                        add EAX, EBX
+    58 0000004A 11CA                        adc EDX, ECX    ;EDX:EAX = a * b - (100 - c) / (b * b) + e + x
+    59                                      
+    60 0000004C 6A00                        push dword 0
+    61 0000004E FF15[00000000]              call [exit]
+    62                                  
+    63                                  

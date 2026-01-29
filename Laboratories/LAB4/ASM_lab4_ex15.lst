@@ -1,0 +1,41 @@
+     1                                  bits 32 
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit
+     6                                  
+     7                                  import exit msvcrt.dll
+     8                                   
+     9                                  segment data use32 class = data
+    10                                      
+    11 00000000 60D4                        A dw 1101_0100_0110_0000b
+    12 00000002 C3A5                        B dw 1010_0101_1100_0011b
+    13 00000004 <res 00000004>              C resd 1
+    14                                      
+    15                                  segment code use32 class = code
+    16                                  start: 
+    17                                      ;the bits 16-31 of C have the value 1
+    18                                      ;the bits 0-2 of C have the value 0
+    19 00000000 B900000000                  mov ecx, 0
+    20 00000005 6683C9FF                    or cx, 1111_1111_1111_1111b
+    21 00000009 C1E110                      shl ecx, 16 
+    22                                      
+    23                                      ;the bits 3-5 of C have the value 1
+    24 0000000C 6683C938                    or cx, 0000_0000_0011_1000b
+    25                                      
+    26                                      ;the bits 6-9 of C are the same as the bits 11-14 of A
+    27 00000010 668B1D[00000000]            mov bx, [A]
+    28 00000017 6681E30078                  and bx, 0111_1000_0000_0000b
+    29 0000001C 66C1EB05                    shr bx, 5
+    30 00000020 6609D9                      or cx, bx
+    31                                      
+    32                                      ;the bits 10-15 of C are the same as the bits 1-6 of B
+    33 00000023 668B1D[02000000]            mov bx, [B]
+    34 0000002A 6683E37E                    and bx, 0000_0000_0111_1110b
+    35 0000002E 66C1E309                    shl bx, 9
+    36 00000032 6609D9                      or cx, bx
+    37                                      
+    38                                      
+    39 00000035 6A00                        push dword 0
+    40 00000037 FF15[00000000]              call [exit]
+    41                                  

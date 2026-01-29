@@ -1,0 +1,68 @@
+     1                                  bits 32 
+     2                                  
+     3                                  global start
+     4                                  
+     5                                  extern exit
+     6                                  
+     7                                  import exit msvcrt.dll
+     8                                   
+     9                                  segment data use32 class = data
+    10                                      
+    11 00000000 06                          a db 6h
+    12 00000001 44332211                    b dd 11223344h
+    13 00000005 22                          c db 22h
+    14 00000006 33                          d db 33h
+    15 00000007 8877665544332211            x dq 1122334455667788h
+    16                                      
+    17                                  segment code use32 class = code
+    18                                  start:;x - (a + b + c * d) / (9 - a) - unsigned
+    19                                      
+    20                                      ;c * d
+    21 00000000 A0[05000000]                mov AL, [c]     ;AL = c
+    22 00000005 F625[06000000]              mul BYTE [d]    ;AX = c * d
+    23                                      
+    24                                      ;c * d -> ECX
+    25 0000000B 666A00                      push WORD 0
+    26 0000000E 6650                        push AX         ;[ESP]1 = EAX = c * d
+    27 00000010 59                          pop ECX         ;ECX = c * d
+    28                                      
+    29                                      ;a -> EAX
+    30 00000011 B800000000                  mov EAX, 0      ;EAX = 00 00 00 00
+    31 00000016 A0[00000000]                mov AL, [a]     ;AL -> EAX = a
+    32                                      
+    33                                      ;b -> EBX
+    34 0000001B 8B1D[01000000]              mov EBX, [b]
+    35                                      
+    36                                      ;dword -> (a + b + c * d)
+    37 00000021 01D8                        add EAX, EBX    ;EAX = a + b 
+    38 00000023 01C8                        add EAX, ECX    ;EAX = (a + b) + c * d
+    39                                      
+    40                                      
+    41                                      ;word -> (9 - a)
+    42 00000025 B309                        mov BL, 9
+    43 00000027 2A1D[00000000]              sub BL, [a]     ;BL = (9 - a)
+    44 0000002D B700                        mov BH, 0       ;BL -> BX = (9 - a)
+    45                                      
+    46                                      ;converting EAX to EDX:EAX and BX to EBX in order to not loose numbers dividing the elements
+    47 0000002F BA00000000                  mov EDX, 0      ;EAX -> EDX:EAX
+    48 00000034 666A00                      push WORD 0
+    49 00000037 6653                        push BX
+    50 00000039 5B                          pop EBX         ;BX -> EBX
+    51                                      
+    52 0000003A F7F3                        div EBX          ;EAX = (a + b + c * d) / (9 - a)
+    53                                      
+    54                                      ;(a + b + c * d) / (9 - a) -> EDX:EAX
+    55 0000003C BA00000000                  mov EDX, 0      ;EAX -> EDX:EAX
+    56                                      
+    57                                      ;x -> ECX:EBX
+    58 00000041 8B1D[07000000]              mov EBX, [x]
+    59 00000047 8B0D[0B000000]              mov ECX, [x + 4];ECX:EBX = x
+    60                                      
+    61                                      ;ECX:EBX - EDX:EAX = x - (a + b + c * d) / (9 - a)
+    62 0000004D 29C3                        sub EBX, EAX
+    63 0000004F 19D1                        sbb ECX, EDX    ;ECX:EBX = x - (a + b + c * d) / (9 - a)
+    64                                      
+    65 00000051 6A00                        push dword 0
+    66 00000053 FF15[00000000]              call [exit]
+    67                                  
+    68                                  

@@ -1,0 +1,38 @@
+     1                                  bits 32
+     2                                  
+     3                                  global _ASMconcatenate
+     4                                  segment data public data use32
+     5 00000000 00000000                	s1 dd 0
+     6 00000004 00000000                    s2 dd 0
+     7 00000008 00000000                    len dd 0
+     8                                  segment code public code use32
+     9                                  _ASMconcatenate:
+    10 00000000 55                      	push ebp
+    11 00000001 89E5                    	mov ebp,esp
+    12                                      
+    13 00000003 8B7C2408                    mov edi, [esp + 8]  ;edi = s1
+    14 00000007 8B74240C                    mov esi, [esp + 12] ;esi = s2
+    15 0000000B 8B4C2410                    mov ecx, [esp + 16] ;ecx = len(s2)
+    16                                      
+    17                                      ;going to the last character in s1
+    18 0000000F B800000000                  mov eax, 0
+    19                                      while_not0:
+    20 00000014 3A07                            cmp al, [edi]
+    21 00000016 7403                            je exit_while
+    22 00000018 47                              inc edi
+    23 00000019 EBF9                            jmp while_not0
+    24                                          
+    25                                      exit_while:
+    26                                      mov [edi], ' ' ;putting a space
+    26          ******************       error: operation size not specified
+    27                                      ;concatenating s2 to s1
+    28 0000001B 47                          inc edi
+    29                                      while_lens2:
+    30 0000001C A4                              movsb ;[edi] = [esi], inc edi, inc esi
+    31 0000001D E2FD                            loop while_lens2
+    32                                          
+    33                                      mov [edi], 0    ;putting the end to s1
+    33          ******************       error: operation size not specified
+    34                                      
+    35 0000001F 5D                          pop ebp
+    36 00000020 C3                          ret

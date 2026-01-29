@@ -1,0 +1,38 @@
+     1                                  bits 32
+     2                                  global start        
+     3                                  
+     4                                  extern exit              
+     5                                  import exit msvcrt.dll    
+     6                                  segment data use32 class=data
+     7 00000000 446F657300                  s1 db "Does", 0
+     8 00000005 <res 0000001E>              between resb 30
+     9 00000023 776F726B3F00                s2 db "work?", 0
+    10 00000029 05                          len db 5
+    11                                      
+    12                                  segment code use32 class=code
+    13                                      start:
+    14 00000000 BF[00000000]                mov edi, s1  ;edi = s1
+    15 00000005 BE[23000000]                mov esi, s2 ;esi = s2
+    16 0000000A 8B0D[29000000]              mov ecx, [len] ;ecx = len(s2)
+    17                                      
+    18                                      ;going to the last character in s1
+    19 00000010 B800000000                  mov eax, 0
+    20                                      while_not0:
+    21 00000015 3A07                            cmp al, [edi]
+    22 00000017 7403                            je exit_while
+    23 00000019 47                              inc edi
+    24 0000001A EBF9                            jmp while_not0
+    25                                          
+    26                                      exit_while:
+    27                                      
+    28 0000001C C60720                      mov [edi], byte ' ' ;putting a space
+    29 0000001F 47                          inc edi
+    30                                      ;concatenating s2 to s1
+    31                                      while_lens2:
+    32 00000020 A4                              movsb ;[edi] = [esi], inc esi, inc edi
+    33 00000021 E2FD                            loop while_lens2
+    34                                          
+    35 00000023 C60700                      mov [edi], byte 0
+    36 00000026 47                          inc edi   
+    37 00000027 6A00                            push    dword 0      
+    38 00000029 FF15[00000000]                  call    [exit]       

@@ -1,0 +1,51 @@
+     1                                  bits 32 
+     2                                  global start        
+     3                                  extern exit   
+     4                                  import exit msvcrt.dll  
+     5                                    
+     6                                  segment data use32 class=data
+     7 00000000 07563412153C2B1A           s DD 12345607h, 1A2B3C15h
+     8                                     lens equ $ - s ;length of s in bytes
+     9 00000008 <res 00000008>             d resb lens 
+    10                                  segment code use32 class=code
+    11                                      start: ;Given an array S of doublewords, build the array of bytes D formed from bytes of doublewords sorted as unsigned numbers in descending order.
+    12                                      
+    13 00000000 BE[00000000]                    mov ESI, s      ; load offset of s in ESI
+    14 00000005 BF[08000000]                    mov EDI, d      ; load offset of d in EDI
+    15 0000000A B908000000                      mov ECX, lens   ;number of bytes in s
+    16 0000000F FC                              CLD             ;making sure it does not go in reverse - DF = 0
+    17                                          
+    18                                          ;coping the bites from s into d
+    19                                          copy_bytes:
+    20 00000010 A4                                  MOVSB       ;[EDI] = [ESI], inc(ESI), inc(EDI)
+    21 00000011 E2FD                            loop copy_bytes    
+    22                                          
+    23                                          ;sorting in descending order with sort
+    24                                          
+    25 00000013 FC                              CLD                             ;DF = 0
+    26 00000014 BE[08000000]                    mov ESI, d                      ;ESI = offset(d), i = 0
+    27                                          loopI:                          ;i = 0 -> lens - 1
+    28 00000019 89F7                                mov EDI, ESI                 
+    29 0000001B 47                                  inc EDI                     ;j = i + 1
+    30 0000001C 89F3                                mov EBX, ESI                ;EBX = offset of local maximum value
+    31 0000001E AC                                  lodsb                       ;AL = [DS:ESI], inc ESI = i++
+    32                                              loopJ:                      ;j = i + 1 -> lens
+    33 0000001F 8A03                                    mov AL, [EBX]           ;AL = the maximum value untill now
+    34 00000021 AE                                      scasb                   ;cmp AL, [ES:EDI], inc EDI = j++
+    35 00000022 7303                                    jae not_below           ;AL >= [ES:EDI] jump over saving the value
+    36 00000024 89FB                                        mov EBX, EDI        ;if AL < [ES:EDI] save the offset of the value 
+    37 00000026 4B                                          dec EBX
+    38                                                  not_below:
+    39                                                 
+    40 00000027 81FF[10000000]                          cmp EDI, d + lens   
+    41 0000002D 72F0                                jb loopJ                    ;if j < lens
+    42                                              ;swap(ESI-1, EBX)
+    43 0000002F 8A4EFF                              mov CL, [ESI - 1]
+    44 00000032 8A13                                mov DL, [EBX] 
+    45 00000034 8856FF                              mov byte [ESI - 1], DL      ;[ESI-1] = the greatest value from position i to lens
+    46 00000037 880B                                mov byte [EBX], CL
+    47 00000039 81FE[0F000000]                      cmp ESI, d + lens - 1       ;[base] + [const]
+    48 0000003F 72D8                            jb loopI                        ;if i < lens-1
+    49                                          
+    50 00000041 6A00                            push    dword 0      
+    51 00000043 FF15[00000000]                  call    [exit]     
